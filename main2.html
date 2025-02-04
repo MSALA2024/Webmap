@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte interactive projet 902_1</title>
+    <!-- Lien vers les styles de Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <!-- Lien vers Font Awesome pour l'icône œil -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* CSS pour la carte */
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+
+        /* Style pour le bouton avec l'icône œil */
+        .leaflet-bar a {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            color: rgb(0, 0, 0);
+            padding: 8px;
+            font-size: 20px; /* Taille de l'icône */
+            text-align: center;
+        }
+
+        .leaflet-bar a:hover {
+            background-color: #5599ff;
+        }
+
+        /* Style pour la légende */
+        #legend {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; margin-top: 10px;">Carte interactive projet 902_1</h1>
+    <div id="map"></div>
+    
+    <div id="legend">
+        <h3>Sample_BD_foret</h3>
+        <img src="https://www.geotests.net/geoserver/salam/wms?REQUEST=GetLegendGraphic&VERSION=1.1.0&FORMAT=image/png&LAYER=salam:Sample_BD_foret_T31TCJ" alt="Légende BD Forêt" />
+    </div>
+
+    <!-- Inclusion de la librairie Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script>
+        // Initialisation de la carte centrée sur la zone d'intérêt
+        var map = L.map('map', {
+            center: [43.549414, 1.677048], // Coordonnées centrées sur la zone NDVI
+            zoom: 9
+        });
+
+        // Définition de plusieurs fonds de carte
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        });
+
+        var cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© CartoDB',
+            subdomains: 'abcd'
+        });
+
+        var cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© CartoDB',
+            subdomains: 'abcd'
+        });
+
+        // Ajout d'un fond de carte satellite (Esri)
+        var esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri &mdash; Source: Esri, i-cubed, USGS, NGA, NASA, CGIAR, Esri, DeLorme, and the GIS User Community'
+        });
+
+        // Ajout du fond de carte Carto Light par défaut
+        cartoLight.addTo(map);
+
+        // Création des couches WMS
+        var wmsNDVI = L.tileLayer.wms('https://www.geotests.net/geoserver/salam/wms', {
+            layers: 'salam:Serie_temp_S2_ndvi',
+            format: 'image/png',
+            transparent: true,
+            version: '1.1.0',
+            attribution: 'Source: GeoTests'
+        });
+
+        var wmsForet = L.tileLayer.wms('https://www.geotests.net/geoserver/salam/wms', {
+            layers: 'salam:Sample_BD_foret_T31TCJ',
+            format: 'image/png',
+            transparent: true,
+            version: '1.1.0',
+            attribution: 'Source: GeoTests'
+        });
+
+        // Ajout des couches WMS à la carte
+        wmsNDVI.addTo(map);
+
+        // Groupes de couches (fonds de carte)
+        var baseMaps = {
+            "OpenStreetMap": osm,
+            "Carto Light": cartoLight,
+            "Carto Dark": cartoDark,
+            "Satellite (Esri)": esriSatellite
+        };
+
+        // Groupes de couches (superpositions)
+        var overlayMaps = {
+            "Serie Temp S2 NDVI (WMS)": wmsNDVI,
+            "BD Forêt (WMS)": wmsForet
+        };
+
+        // Contrôle permettant de choisir les couches
+        L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+
+        // Ajout d'un bouton pour recentrer la carte sur la zone d'intérêt
+        var resetButton = L.control({ position: 'topright' });
+        resetButton.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'leaflet-bar');
+            div.innerHTML = '<a href="#"><i class="fas fa-eye"></i></a>'; // Icône d'œil
+            div.onclick = function() {
+                map.setView([43.549414, 1.677048], 9); // Recentrer la carte sur la zone NDVI
+            };
+            return div;
+        };
+        resetButton.addTo(map);
+    </script>
+</body>
+</html>
